@@ -4,9 +4,9 @@ This repository currently contains integration tests for [global-input-message](
 ### How to Run
 
 ```
-   git clone  https://github.com/global-input/est-global-input-app-libs.git
-   cd content-transfer-example  
+   git clone  https://github.com/global-input/test-global-input-app-libs.git
+   cd test-global-input-app-libs
    npm install
-   npm start
+   npm run test
 ```
    
