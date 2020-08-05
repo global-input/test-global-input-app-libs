@@ -1,6 +1,6 @@
 import { useGlobalInputApp,MobileState,createMessageConnector,createWaitForFieldMessages,decryptCodeData,mobileConnect} from 'global-input-react';
 import {InitData} from 'global-input-react';
-import { renderHook} from '@testing-library/react-hooks'
+import { renderHook,act} from '@testing-library/react-hooks'
 
 
 /**
@@ -52,6 +52,7 @@ it("Device App and Mobile App should be able to communicate", async function () 
   let fields=createWaitForFieldMessages(initData.form.fields);
   const {result,waitForNextUpdate,unmount}=renderHook(()=>useGlobalInputApp({ initData }));
   await waitForNextUpdate();
+  
   expect(result.current.mobileState).toBe(MobileState.WAITING_FOR_MOBILE);
   
   //const {findByTestId}=render(<div>{connectionMessage}</div>);  //display QR Code here
@@ -62,28 +63,40 @@ it("Device App and Mobile App should be able to communicate", async function () 
  
   const {getPermission,input}=await mobileConnect(mobileConnector,codeData);//mobile connect
   
-  
-  const permissionMessage=await getPermission(); //wait for permission message send by the target device
-  expect(permissionMessage.allow).toBeTruthy();//should allow and should contain form information
-  expect(permissionMessage.initData).toBeTruthy()
-  permissionMessage.initData && assertInitData(permissionMessage.initData,initData);
-  
+
+
+  await act(async ()=>{
+    const permissionMessage=await getPermission(); //wait for permission message send by the target device
+    expect(permissionMessage.allow).toBeTruthy();//should allow and should contain form information
+    expect(permissionMessage.initData).toBeTruthy();
+    permissionMessage.initData && assertInitData(permissionMessage.initData,initData);
+  });
+  expect(result.current.mobileState).toBe(MobileState.MOBILE_CONNECTED);
+    
   const sampleMessage={ 
           content:"User filled this content on the Global Input App",
           something:"222",
           colorCode:33
   }; 
+  
   mobileConnector.sendInputMessage(sampleMessage, 0); //mobile sends information to the device
+  
   const messageReceived= await fields[0].get();    
   expect(messageReceived).toEqual(sampleMessage);
+  
   fields[0].reset();
 
   const contentSendByDevice="send by device app";
-  result.current.setFieldValueById(initData.form.fields[0].id,contentSendByDevice);
-  const inputMessageOnMobile=await input.get();
-  expect(inputMessageOnMobile.data.value).toEqual(contentSendByDevice);
-  expect(inputMessageOnMobile.data.index).toEqual(0);
-  input.reset();
+  await act(async ()=>{
+    result.current.setFieldValueById(initData.form.fields[0].id,contentSendByDevice);
+    const inputMessageOnMobile=await input.get();
+    input.reset();
+    expect(inputMessageOnMobile.data.value).toEqual(contentSendByDevice);
+    expect(inputMessageOnMobile.data.index).toEqual(0);  
+  });
+  
+
+  
 
   const initData2={
         action: "input",
@@ -107,11 +120,16 @@ it("Device App and Mobile App should be able to communicate", async function () 
         ]
         }
     };
-    fields=createWaitForFieldMessages(initData2.form.fields);
-    result.current.setInitData(initData2);
-    const initDataMessage=await input.get();    
 
-    initDataMessage.initData && assertInitData(initDataMessage.initData,initData2);
+    fields=createWaitForFieldMessages(initData2.form.fields);
+    await act(async ()=>{
+      result.current.setInitData(initData2);
+      const initDataMessage=await input.get();    
+  
+      initDataMessage.initData && assertInitData(initDataMessage.initData,initData2);
+      
+    });
+    
 
     const firstName="dilshat";
     const lastName="hewzulla";
@@ -127,6 +145,7 @@ it("Device App and Mobile App should be able to communicate", async function () 
     expect(lastNameReceived).toEqual(lastName);
     fields[1].reset();
     mobileConnector.disconnect();  
+
     unmount();
 
 });
