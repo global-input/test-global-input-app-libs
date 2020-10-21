@@ -1,5 +1,5 @@
 ## Tests of global-input libraries 
-This repository currently contains integration tests for [global-input-message](https://github.com/global-input/global-input-message) and [global-input-react](https://github.com/global-input/global-input-react). It is intended to document and verify the cross-device operations provided by the Global Input App components and extensions. 
+This repository is intended to focus on testing [global-input-message](https://github.com/global-input/global-input-message) and [global-input-react](https://github.com/global-input/global-input-react) components. 
 
 ### How to Run
 
