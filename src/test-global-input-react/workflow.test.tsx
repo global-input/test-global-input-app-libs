@@ -1,4 +1,4 @@
-import { useGlobalInputApp,MobileState,createMessageConnector,createWaitForFieldMessages,decryptCodeData,mobileConnect} from 'global-input-react';
+import { useGlobalInputApp,createMessageConnector,createWaitForFieldMessages,decryptCodeData,mobileConnect} from 'global-input-react';
 import {InitData} from 'global-input-react';
 import { renderHook,act} from '@testing-library/react-hooks'
 
@@ -98,7 +98,8 @@ it("Device App and Mobile App should be able to communicate", async function () 
   let fieldMessages=createWaitForFieldMessages(testData[0].initData.form.fields); //create promises to wait for messages
   const {result,waitForNextUpdate,unmount}=renderHook(()=>useGlobalInputApp({ initData:testData[0].initData }));
   await waitForNextUpdate();  
-  expect(result.current.mobileState).toBe(MobileState.WAITING_FOR_MOBILE); //now ready for mobile to connect
+
+  expect(result.current.isReady).toBe(true); //now ready for mobile to connect
   
 
   /**
@@ -119,7 +120,7 @@ it("Device App and Mobile App should be able to communicate", async function () 
     expect(permissionMessage.initData).toBeTruthy();//should contain the initData which contains the data to tell mobile to compose an user interface
     permissionMessage.initData && assertInitData(permissionMessage.initData,testData[0].initData); //the initData received should be identical to the one sent by the device 
   });
-  expect(result.current.mobileState).toBe(MobileState.MOBILE_CONNECTED); //mobile is now connected to the device
+  expect(result.current.isConnected).toBe(true); //mobile is now connected to the device
     
   /**
    * Now mobile should be able sends data
@@ -135,7 +136,7 @@ it("Device App and Mobile App should be able to communicate", async function () 
    * The mobile should be able to receive the data
    */       
   await act(async ()=>{
-    result.current.setFieldValueById(testData[0].initData.form.fields[0].id,testData[0].sentByDevice); //device sends data
+    result.current.sendValue(testData[0].initData.form.fields[0].id,testData[0].sentByDevice); //device sends data
     const inputMessage=await mobileInput.get(); //mobile receives the data
     mobileInput.reset(); //mobile ready for the next message
     expect(inputMessage.data.value).toEqual(testData[0].sentByDevice); // should be identical to the data sent by device
@@ -152,7 +153,7 @@ it("Device App and Mobile App should be able to communicate", async function () 
 
     fieldMessages=createWaitForFieldMessages(testData[1].initData.form.fields);
     await act(async ()=>{
-      result.current.setInitData(testData[1].initData);
+      result.current.sendInitData(testData[1].initData);
       const inputMessage=await mobileInput.get(); //mobile receives the message
       mobileInput.reset(); //mobile ready for the next message      
       inputMessage.initData && assertInitData(inputMessage.initData,testData[1].initData);      
@@ -185,7 +186,7 @@ it("Device App and Mobile App should be able to communicate", async function () 
    */
 
   await act(async ()=>{
-    result.current.setFieldValueById(testData[1].initData.form.fields[0].id,testData[1].firstNameSentByDevice); //device sends a message
+    result.current.sendValue(testData[1].initData.form.fields[0].id,testData[1].firstNameSentByDevice); //device sends a message
     const inputMessage=await mobileInput.get(); //mobile receives the message
     mobileInput.reset(); //mobile ready for the next message
     expect(inputMessage.data.value).toEqual(testData[1].firstNameSentByDevice); //mobile should receive the same message sent by device
@@ -197,12 +198,13 @@ it("Device App and Mobile App should be able to communicate", async function () 
    */
 
   await act(async ()=>{
-    result.current.setFieldValueById(testData[1].initData.form.fields[1].id,testData[1].lastNameSentByDevice); //device sends a message
+    result.current.sendValue(testData[1].initData.form.fields[1].id,testData[1].lastNameSentByDevice); //device sends a message
     const inputMessage=await mobileInput.get(); //mobile receives the message
     mobileInput.reset(); //mobile ready for the next message
     expect(inputMessage.data.value).toEqual(testData[1].lastNameSentByDevice); //mobile should receive the same message sent by device
     expect(inputMessage.data.index).toEqual(1);  //and index of the message should be correct.
   });
+  unmount();
 
     
 });

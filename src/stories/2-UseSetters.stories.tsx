@@ -1,37 +1,47 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {useGlobalInputApp} from 'global-input-react';
 
+const contentField={
+  label:"Content",
+  id:"content",
+  value:"",
+  nLines:10            
+}
 
-
-export const TestWithContentTransferForm=()=>{
-  const initData={
-    action:"input",
-    dataType:"form",
-    form:{            
-      title:"Content Transfer",            
-      fields:[{
-        label:"Content",
-        id:"content",
-        value:"",
-        nLines:10            
-    }]
-    }
+const initData={
+  action:"input",
+  dataType:"form",
+  form:{            
+    title:"Content Transfer",            
+    fields:[contentField]
+  }
 };  
-let {connectionMessage,WhenConnected, WhenDisconnected,values,setters}=useGlobalInputApp({initData});
-const [content]=values;
-const [setContent]=setters;
+export const TestWithContentTransferForm=()=>{
+  
+const [content,setContent]=useState('');
+let mobile=useGlobalInputApp({initData});
+mobile.setOnchange(({field})=>{
+      setContent(field.value as string);
+});
 
 return(
     <div>
-       <div>{connectionMessage}</div>
-                <WhenConnected>
+      <div>Test Input</div>
+       <mobile.ConnectQR/>
+       {mobile.isConnected && (       
+         
                         <textarea style={{width:500, height:500}} value={content as string} onChange={evt => {
-                            setContent(evt.target.value);                                   
+                            setContent(evt.target.value);  
+                            mobile.sendValue(contentField.id,evt.target.value);
                         }}/>
-                </WhenConnected>
-                <WhenDisconnected>
-                 {content}
-                </WhenDisconnected>
+        )}
+        {mobile.isDisconnected && (
+                <>
+                 <div>{content}</div>
+                 <div>disconnected</div>
+                </>
+        )}
+       
 </div>
 );
 };

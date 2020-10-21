@@ -1,6 +1,7 @@
-import { useGlobalInputApp,createMessageConnector,createWaitForFieldMessages,decryptCodeData,mobileConnect} from 'global-input-react';
+import { useGlobalInputApp,createMessageConnector,decryptCodeData,mobileConnect} from 'global-input-react';
 import {InitData} from 'global-input-react';
 import { renderHook,act} from '@testing-library/react-hooks'
+
 
 
 /**
@@ -27,7 +28,6 @@ import { renderHook,act} from '@testing-library/react-hooks'
 
 
 
-
   const initData={
     action: "input",
     dataType: "form",
@@ -46,45 +46,27 @@ import { renderHook,act} from '@testing-library/react-hooks'
     }
    };
 
-   const initData2={
-    action: "input",
-    dataType: "form",
-    form: {
-    id: "test2@globalinput.co.uk",
-    title: "Global Input App Test 2",
-    label: "Global Input Test 2",
-    fields: [
-        {
-            label: "First Name",
-            id: "firstName",
-            value: "",
-            nLines: 10
-        },{
-            label: "Last Name",
-            id: "lastName",
-            value: "",
-            nLines: 10                
-        },
-    ]
-    }
-};
 
 it("Device App and Mobile App should be able to communicate", async function () {
 
-  let fields=createWaitForFieldMessages(initData.form.fields);
   const {result,waitForNextUpdate,unmount}=renderHook(()=>useGlobalInputApp({ initData }));
+  
   await waitForNextUpdate();
+  
+  
   
   expect(result.current.isReady).toBe(true);
 
-  
+   const mockOnFieldChanged=jest.fn();
+  result.current.setOnchange(mockOnFieldChanged);
+  console.log("--------device is ready---");
   //const {findByTestId}=render(<div>{connectionMessage}</div>);  //display QR Code here
   // const {code, level,size}=await getQRCodeValues({findByTestId}); //qrcode.react module is mocked
   
   const mobileConnector=createMessageConnector();  
   const {codeData}=await decryptCodeData(result.current.connectionCode,mobileConnector); //mobile decrypt the connection
  
-  const {getPermission,input}=await mobileConnect(mobileConnector,codeData);//mobile connect
+  const {getPermission}=await mobileConnect(mobileConnector,codeData);//mobile connect
   
 
 
@@ -103,53 +85,24 @@ it("Device App and Mobile App should be able to communicate", async function () 
   }; 
   
   mobileConnector.sendInputMessage(sampleMessage, 0); //mobile sends information to the device
-  
-  const messageReceived= await fields[0].get();    
-  expect(messageReceived).toEqual(sampleMessage);  
-  fields[0].reset();
-
-  const contentSendByDevice="send by device app";
-  await act(async ()=>{
-    result.current.sendValue(initData.form.fields[0].id,contentSendByDevice);
-    const inputMessageOnMobile=await input.get();
-    input.reset();
-    expect(inputMessageOnMobile.data.value).toEqual(contentSendByDevice);
-    expect(inputMessageOnMobile.data.index).toEqual(0);  
-  });
+  await waitForNextUpdate();  
+  expect(mockOnFieldChanged.mock.calls.length).toBe(1);  
   
 
   
-
+  expect(mockOnFieldChanged.mock.calls[0][0].field.id).toBe(initData.form.fields[0].id);
+  expect(mockOnFieldChanged.mock.calls[0][0].field.label).toBe(initData.form.fields[0].label);
+  expect(mockOnFieldChanged.mock.calls[0][0].field.value).toEqual(sampleMessage);
   
 
-    fields=createWaitForFieldMessages(initData2.form.fields);
-    await act(async ()=>{
-      result.current.sendInitData(initData2);
-      const initDataMessage=await input.get();    
+
+
+  //await waitForNextUpdate();  
   
-      initDataMessage.initData && assertInitData(initDataMessage.initData,initData2);
-      
-    });
-    
-
-    const firstName="dilshat";
-    const lastName="hewzulla";
-    
-    mobileConnector.sendInputMessage(firstName, 0); //mobile sends information to the device
-    const firstNameReceived= await fields[0].get();
-    expect(firstNameReceived).toEqual(firstName);
-    fields[0].reset();
-
-
-    mobileConnector.sendInputMessage(lastName, 1); //mobile sends information to the device
-    const lastNameReceived= await fields[1].get();
-    expect(lastNameReceived).toEqual(lastName);
-    fields[1].reset();
-    mobileConnector.disconnect();  
 
     unmount();
 
-},100000);
+},10000);
 
 
 

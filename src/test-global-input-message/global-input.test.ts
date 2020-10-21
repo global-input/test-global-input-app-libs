@@ -257,7 +257,7 @@ import {InitData} from 'global-input-message'; //import types
     mobileConnector.disconnect();
     deviceConnector.disconnect();
     
-    });
+    },10000);
 
 
   });
