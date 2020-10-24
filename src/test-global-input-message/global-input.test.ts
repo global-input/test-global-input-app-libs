@@ -1,8 +1,7 @@
-import { createMessageConnector, decryptCodeData,
-        deviceConnect,mobileConnect,deviceSendInitData} from "global-input-message"; 
+import { createMessageConnector, createInputReceivers} from "global-input-message"; 
 
 
-//import {deviceConnect,decryptCodeData,mobileConnect,deviceSendInitData} from "global-input-message"; //this is utility for creating promises from callbacks to make the steps more intuitive
+
 import {InitData} from 'global-input-message'; //import types
 
   /**
@@ -10,8 +9,10 @@ import {InitData} from 'global-input-message'; //import types
    * @param {*} initData 
    * @param {*} expectedInitData 
    */
-  const assertInitData = (initData:InitData, expectedInitData:InitData)=>{
-    
+  const assertInitData = (initData?:InitData, expectedInitData:InitData)=>{
+    if(!initData){
+      throw new Error("initData is missing");
+    }
     expect(initData.action).toBe(expectedInitData.action);
     expect(initData.dataType).toBe(expectedInitData.dataType);
     expect(initData.form.id).toBe(expectedInitData.form.id);
@@ -32,227 +33,189 @@ import {InitData} from 'global-input-message'; //import types
     test('receiver sender should send input message', async () => {
 
 
-      let initData:InitData = {
-        action: "input",    
-        dataType: "form",        
-        form: {
-          title: "Login",
-          id:"someForm",
-          label:"someFolder",
-          fields: [{
-            label: "Email address",
-            value: "some value"
-          }, {
-            label: "Password",
-            type: "secret"
-          }, {
-            label: "Login",
-            type: "action"
-          }]
-        }
-      };
+      
             
       
           
-      const deviceConnectOption = {
+      const deviceConfig = {
         //url: 'http://localhost:1337',
         // cSpell:disable
         //apikey: "k7jc3QcMPKEXGW5UC",
         // cSpell:enable     
-        initData
+        initData:{
+          action: "input",    
+          dataType: "form",        
+          form: {
+            title: "Login",
+            id:"someForm",
+            label:"someFolder",
+            fields: [{
+              label: "Email address",
+              value: "some value"
+            }, {
+              label: "Password",
+              type: "secret"
+            }, {
+              label: "Login",
+              type: "action"
+            }]
+          }
+        }
       };
     
       
-      const deviceConnector = createMessageConnector();
+      const deviceConnector = createMessageConnector(); 
+      let deviceData=createInputReceivers(deviceConfig);  //set up message receivers on the device    
+      const {connectionCode}=await deviceConnector.connect(deviceConfig); //device app starts up and obtains the connection code.
       
-      let {registered,fields} = deviceConnect(deviceConnector,deviceConnectOption);
       
-      await registered();    //device registered
-    
-      let codedata = deviceConnector.buildInputCodeData(); // device generate encrypted connection code
-      
-      //We assume here that mobile app obtains the codedata by scanning the QR Code
 
-      const mobileConnector = createMessageConnector(); //Mobile App prepare for connection
-      
-      const {codeData,codeType}=await decryptCodeData(codedata,mobileConnector);//mobile app decrypts the code
-      expect(codeType).toBe('input'); 
-
-      const {getPermission,input} = mobileConnect(mobileConnector,codeData); //mobile connect with the codeData
-
-      
-      const permissionMessage = await getPermission(); //mobile receive permission 
-    
-      expect(permissionMessage.allow).toBeTruthy();//should allow and should contain form information
-      expect(permissionMessage.initData).toBeTruthy();
-      
-      permissionMessage.initData && assertInitData(permissionMessage.initData,initData);
+      const mobileConnector = createMessageConnector(); 
+      const mobileData=createInputReceivers();
+      const {initData}=await mobileConnector.connect(mobileData.config,connectionCode);
+      assertInitData(initData,deviceConfig.initData);
       
     
-      const message1 = { content: "dilshat" };
-      mobileConnector.sendInputMessage(message1, 0); //mobile  sends the first message, and the device receives it
-      const messageReceived1 = await fields[0].get(); //device receives the message
-      expect(messageReceived1).toEqual(message1);
-      fields[0].reset(); //to be ready to receive the next message
+      const messageSentByMobile = { content: "dilshat" };
+      mobileConnector.sendInputMessage(messageSentByMobile, 0); //mobile  sends the first message, and the device receives it
+      const messageReceivedByDevice = deviceData.inputs && await deviceData.inputs[0].get(); //device receives the message
+
+      expect(messageReceivedByDevice).toEqual(messageSentByMobile);
+      
     
-      const message2 = { content: "password111" };
-      mobileConnector.sendInputMessage(message2, 1); //mobile  sends the second message, and the device receives it
-      const messageReceived2 = await await fields[1].get() //device receives the message
-      expect(messageReceived2).toEqual(message2);
-      fields[1].reset(); //to be ready to receive the next message
-    
-      const message3={content:"some value"};
-      deviceConnector.sendInputMessage(message3,0); //device sends first message
-      const messageReceived3=await input.get();   //mobile receives the message 
-      expect(messageReceived3.data.index).toEqual(0);
-      expect(messageReceived3.data.value).toEqual(message3);
-      input.reset(); //mobile ready to receive the next message
+      const message2SentByMobile = { content: "password111" };
+      mobileConnector.sendInputMessage(message2SentByMobile, 1); //mobile  sends the second message, and the device receives it
+      const message2ReceivedByDevice = deviceData.inputs && await deviceData.inputs[1].get(); //device receives the message
+      expect(message2ReceivedByDevice).toEqual(message2SentByMobile);
+      
+      const messageSentByDevice={content:"some value"};
+      deviceConnector.sendInputMessage(messageSentByDevice,0); //device sends first message
+      const messageReceivedByMobile=mobileData.input && await mobileData.input.get();   //mobile receives the message 
+      expect(messageReceivedByMobile && messageReceivedByMobile.data.index).toEqual(0);
+      expect(messageReceivedByMobile && messageReceivedByMobile.data.value).toEqual(messageSentByDevice);
+      
 
-      const message4={content:"some value 2"};
-      deviceConnector.sendInputMessage(message4,1); //device sends the first message, and the mobile receives it
-      const messageReceived4=await input.get();      
-      expect(messageReceived4.data.index).toEqual(1);
-      expect(messageReceived4.data.value).toEqual(message4);      
-      input.reset(); //mobile ready to receive the next message
-
-
-      const initData2={
-        action: "input",
-        dataType: "form",
-        form: {
-        id: "test2@globalinput.co.uk",
-        title: "Global Input App Test 2",
-        label: "Global Input Test 2",
-        fields: [
-            {
-                label: "First Name",
-                id: "firstName",
-                value: "",
-                nLines: 10                    
-            },{
-                label: "Last Name",
-                id: "lastName",
-                value: "",
-                nLines: 10                    
-            },
-        ]
+      const message2SentByDevice={content:"some value 2"};
+      deviceConnector.sendInputMessage(message2SentByDevice,1); //device sends the first message, and the mobile receives it
+      const message2ReceivedByMobile=mobileData.input && await mobileData.input.get();   //mobile receives the message 
+      expect(message2ReceivedByMobile && message2ReceivedByMobile.data.index).toEqual(1);
+      expect(message2ReceivedByMobile && message2ReceivedByMobile.data.value).toEqual(message2SentByDevice);
+      const deviceConfig2 = {
+            initData:{
+              action: "input",
+              dataType: "form",
+              form: {
+              id: "test2@globalinput.co.uk",
+              title: "Global Input App Test 2",
+              label: "Global Input Test 2",
+              fields: [
+                  {
+                      label: "First Name",
+                      id: "firstName",
+                      value: "",
+                      nLines: 10                    
+                  },{
+                      label: "Last Name",
+                      id: "lastName",
+                      value: "",
+                      nLines: 10                    
+                  },
+              ]
+              }
         }
-   };
-
-   fields=deviceSendInitData(deviceConnector,initData2); //device sent initData
-   const messageForInitData=await input.get(); //mobile receives the initData
-   expect(messageForInitData.initData).toBeTruthy();
-   messageForInitData.initData && assertInitData(messageForInitData.initData,initData2); //received should match what is sent
-   input.reset(); //mobile input ready for the next input
-
-   const message5 = { firstName: "dilshat" };
-   mobileConnector.sendInputMessage(message5,0);        //mobile sends a message
-   const messageReceived5 = await fields[0].get();  //device receives it
-   expect(messageReceived5).toEqual(message5);
-   fields[0].reset();
-
-
-   const message6 = { lastName: "hewzulla" };
-   mobileConnector.sendInputMessage(message6,1); //mobile sends a message
-   const messageReceived6 = await fields[1].get(); //device receives it.
-   expect(messageReceived6).toEqual(message6);
-   fields[1].reset();
-
+      };
+      deviceData=createInputReceivers(deviceConfig2);
+      deviceConnector.sendInitData(deviceConfig2.initData); //device sent initData
+      const messageForInitData=mobileData.input && await mobileData.input.get(); //mobile receives the initData      
+      expect(messageForInitData && messageForInitData.initData).toBeTruthy();
+      messageForInitData && assertInitData(messageForInitData.initData,deviceConfig2.initData); //received should match what is sent
       
+      const message3SentByMobile = { firstName: "dilshat" };
+      mobileConnector.sendInputMessage(message3SentByMobile,0);        //mobile sends a message
+      const message3ReceivedByDevice = deviceData.inputs && await deviceData.inputs[0].get();  //device receives it
+      expect(message3ReceivedByDevice).toEqual(message3SentByMobile);
+   
+      const message4SentByMobile = { lastName: "hewzulla" };
+      mobileConnector.sendInputMessage(message4SentByMobile,1); //mobile sends a message
+      const message4ReceivedByDevice = deviceData.inputs && await deviceData.inputs[1].get();  //device receives it
+      expect(message4ReceivedByDevice).toEqual(message4SentByMobile);
        
-   const message7={firstName: "name1"};            
-   deviceConnector.sendInputMessage(message7,0); //device sends the first message, and the mobile receives it      
-   const messageReceived7=await input.get();  
-   expect(messageReceived7.data.index).toEqual(0);
-   expect(messageReceived7.data.value).toEqual(message7);
-   input.reset();
-
-   mobileConnector.disconnect();
-  deviceConnector.disconnect();
+      const message3SentByDevice={firstName: "name1"};            
+      deviceConnector.sendInputMessage(message3SentByDevice,0); //device sends the first message, and the mobile receives it      
+      const messageReceived7ByMobile=mobileData.input && await mobileData.input.get();  
+      expect(messageReceived7ByMobile && messageReceived7ByMobile.data.index).toEqual(0);
+      expect(messageReceived7ByMobile && messageReceived7ByMobile.data.value).toEqual(message3SentByDevice);
+   
+      mobileConnector.disconnect();
+      deviceConnector.disconnect();
     
   });
 
-
-
-
     test('receiver sender should pairing', async () => {
-      const initData={
-        action:"input",
-        form:{
-               title:"Login",
-                  fields:[{
-                label:"Email address",
-                value:"some value"
-                },{
-                  label:"Password",
-                 type:"secret"
-                },{
-                  label:"Login",
-                 type:"action"
-               }]
-          }
-    };
-      const deviceConnectOption={
+      
+      const deviceConfig={
         url:'https://globalinput.co.uk',
         // cSpell:disable      
         securityGroup:"KqfMZzevq2jCbQUg+W8i750",        
         apikey:"k7jc3QcMPKEXGW5UC",
         // cSpell:enable              
-        initData
+        initData:{
+          action:"input",
+          form:{
+                 title:"Login",
+                    fields:[{
+                  label:"Email address",
+                  value:"some value"
+                  },{
+                    label:"Password",
+                   type:"secret"
+                  },{
+                    label:"Login",
+                   type:"action"
+                 }]
+            }
+      }
     }
     
       const codeAES = "YFd9o8glRNIvM0C2yU8p4";
       const deviceConnector=createMessageConnector();
       deviceConnector.setCodeAES(codeAES);
-      let {registered,fields}=deviceConnect(deviceConnector,deviceConnectOption);
-      await  registered(); //device is ready to connect
-
+      
+      let deviceData = createInputReceivers(deviceConfig);
+      const connectCode=await deviceConnector.connect(deviceConfig);  //connect
       const encryptedDevicePairingCodeData=deviceConnector.buildPairingData(); //get pairing code from the device
 
       const mobileConnector=createMessageConnector(); //mobile app
-      //mobile app scans the code 
 
-      const {codeData:paringCodeData,codeType:pairingCodeType}=await decryptCodeData(encryptedDevicePairingCodeData,mobileConnector);//mobile app decrypts the code
-      expect(pairingCodeType).toBe('pairing');
-      expect(paringCodeData).toEqual({
-          securityGroup:deviceConnectOption.securityGroup,
-          codeAES,
-          action:"pairing"
+      let mobileData=createInputReceivers();
+      const {codeData}=await mobileConnector.connect(mobileData.config,encryptedDevicePairingCodeData); //expected to get the codeData for pairing      
+      expect(codeData).toEqual({
+        securityGroup:deviceConfig.securityGroup,
+        codeAES,
+        action:"pairing"
       });
       
-      paringCodeData.codeAES && mobileConnector.setCodeAES(paringCodeData.codeAES);
-      paringCodeData.securityGroup && mobileConnector.setSecurityGroup(paringCodeData.securityGroup);
+      expect(codeData && codeData.codeAES).toBeTruthy();
+      expect(codeData && codeData.securityGroup).toBeTruthy();
+      codeData && codeData.codeAES && mobileConnector.setCodeAES(codeData.codeAES);   //pair the mobile with the data
+      codeData && codeData.securityGroup && mobileConnector.setSecurityGroup(codeData.securityGroup); //pair the mobile with the data
+      const inputCodeData=deviceConnector.buildInputCodeData(); //get the connectionCode
+    
+      const {initData}=await mobileConnector.connect(mobileData.config,inputCodeData); //connect to the device using the code
+      assertInitData(initData,deviceConfig.initData);  //should get the initData from the device
 
-      const inputCodeData=deviceConnector.buildInputCodeData();
-      
-      const {codeData,codeType} = await decryptCodeData(inputCodeData,mobileConnector);//mobile app decrypts the code
-      expect(codeType).toBe('input');       
-      
-      const {getPermission,input} = mobileConnect(mobileConnector,codeData); //mobile connect with the codeData
-      
-      const permissionMessage = await getPermission(); //mobile receive permission 
+            
+    const messageSentByMobile={content:"dilshat"};    
+    mobileConnector.sendInputMessage(messageSentByMobile, 0); //message send by mobile should be received by device
+    const messageReceivedByDevice=deviceData.inputs && await deviceData.inputs[0].get();
+    expect(messageReceivedByDevice).toEqual(messageSentByMobile);
     
-      expect(permissionMessage.allow).toBeTruthy();//should allow and should contain form information
-
-      expect(permissionMessage.initData).toBeTruthy();
-
-      permissionMessage.initData && assertInitData(permissionMessage.initData,initData);
+    const messageSentByDevice={content:"next content"};    
+    deviceConnector.sendInputMessage(messageSentByDevice,0);
+    const messageReceivedByMobile=mobileData.input && await mobileData.input.get();
     
-      
-    const messageFromMobile={content:"dilshat"};
-    
-    mobileConnector.sendInputMessage(messageFromMobile, 0); //message send by mobile should be received by device
-    const messageReceivedByDevice=await fields[0].get();
-    expect(messageReceivedByDevice).toEqual(messageFromMobile);
-    const messageFromDevice={content:"next content"};
-    fields[0].reset();
-    
-    deviceConnector.sendInputMessage(messageFromDevice,0);
-    const messageReceivedByMobile=await input.get();
-    
-    expect(messageReceivedByMobile.data.index).toEqual(0);
-    expect(messageReceivedByMobile.data.value).toEqual(messageFromDevice);
-    
+    expect(messageReceivedByMobile && messageReceivedByMobile.data.index).toEqual(0);
+    expect(messageReceivedByMobile && messageReceivedByMobile.data.value).toEqual(messageSentByDevice);
     
     mobileConnector.disconnect();
     deviceConnector.disconnect();
