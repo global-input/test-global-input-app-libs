@@ -3,20 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/jest-dom": "^5.11.5",
     "@testing-library/react": "^11.1.0",
-    "@testing-library/user-event": "^12.1.9",
+    "@testing-library/user-event": "^12.1.10",
     "@types/jest": "^26.0.15",
-    "@types/node": "^14.14.1",
+    "@types/node": "^14.14.5",
     "@types/qrcode.react": "^1.0.1",
-    "@types/react-dom": "^16.9.8",
-    "global-input-message": "^1.8.8",
+    "@types/react-dom": "^16.9.9",
+    "global-input-message": "^2.0.1",
     "global-input-react": "^4.1.0",
     "qrcode.react": "^1.0.0",
     "react": "^17.0.0",
-    "react-dom": "^17.0.0",
+    "react-dom": "^17.0.1",
     "react-scripts": "3.4.4",
-    "typescript": "~4.0.3"
+    "typescript": "~4.0.5"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -42,12 +42,12 @@
     ]
   },
   "devDependencies": {
-    "@storybook/addon-actions": "^6.0.26",
-    "@storybook/addon-links": "^6.0.26",
-    "@storybook/addons": "^6.0.26",
+    "@storybook/addon-actions": "^6.0.27",
+    "@storybook/addon-links": "^6.0.27",
+    "@storybook/addons": "^6.0.27",
     "@storybook/preset-create-react-app": "^3.1.4",
-    "@storybook/react": "^6.0.26",
+    "@storybook/react": "^6.0.27",
     "@testing-library/react-hooks": "^3.4.2",
-    "react-test-renderer": "^17.0.0"
+    "react-test-renderer": "^17.0.1"
   }
 }
