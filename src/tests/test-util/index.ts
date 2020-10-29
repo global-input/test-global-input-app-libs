@@ -36,18 +36,6 @@ export interface TestAppReact2 {
     calls:any[];    
 };
 
-
-
-/*
-export interface TestApp {
-  con?: GlobalInputMessageConnector;
-  hook?:any;
-  receiver: PromiseMessageReceiver;
-  ui?: InitData;
-  message?: any;
-  codeAES?: string;  
-};
-*/
 export interface DeviceApp {    
     hook:any;    
     ui?: InitData;
