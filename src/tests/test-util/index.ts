@@ -1,6 +1,11 @@
-import { GlobalInputMessageConnector, InitData, createInputReceivers,PromiseMessageReceiver} from "global-input-react"; //import types;
+import { GlobalInputMessageConnector, InitData} from "global-input-react"; //import types;
+
+import {PromiseMessageReceiver,createInputReceivers} from './promising-callbacks';
 
 export {createInputReceivers};
+
+//export  {createInputReceivers,PromiseMessageReceiver,MessageReceiver};
+//export {createInputReceivers,PromiseMessageReceiver,MessageReceiver};
 declare global {
     namespace jest {
         interface Matchers<R> {
@@ -8,17 +13,20 @@ declare global {
         }
     }
 }
+
+
+
 export interface TestApp {
     con: GlobalInputMessageConnector;
     receiver: PromiseMessageReceiver;
-    ui?: InitData;
+    ui: InitData|null;
     message?: any;    
 };
 
 export interface TestAppReact {
     hook:any;   
     receiver: PromiseMessageReceiver; 
-    ui?: InitData;
+    ui: InitData;
     message?: any;    
 };
 export interface TestAppReact2 {

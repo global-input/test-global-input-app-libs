@@ -1,12 +1,12 @@
-import { createMessageConnector} from "global-input-message";
+import { createMessageConnector,generateRandomString,encrypt,decrypt} from "global-input-message";
 
-import * as testUtil from '../testUtil';
+import * as testUtil from '../test-util';
 
 expect.extend({toBeSameInitData:testUtil.toBeSameInitData});
 
-describe("Mobile and Device Communication", () => {
+describe("Global Input Message Tests", () => {
 
-    test('receiver sender should send input message', async () => {
+    test('tests for messages sent between a mobile app and a device app', async () => {
         const deviceConfig = {
             //url: 'http://localhost:1337',
             // cSpell:disable
@@ -218,6 +218,28 @@ describe("Mobile and Device Communication", () => {
 
     }, 10000);
 
+    test("encrypt and decrypt tests", function(){
+
+        const codedata={
+                  url:"https://globalinput.co.uk",
+                  session:generateRandomString(17),
+                  action:"input",
+                  aes:generateRandomString(17)
+        };
+        const codeAES=generateRandomString(17);
+
+        const codeString=JSON.stringify(codedata);
+        const encryptedValue="A"+encrypt("J"+codeString,codeAES);            
+        const decrypted=decrypt(encryptedValue.substring(1),codeAES);
+        
+        const obj=JSON.parse(decrypted.substring(1));
+        expect(obj.url).toBe(codedata.url);
+        expect(obj.session).toBe(codedata.session);
+        expect(obj.action).toBe(codedata.action);
+        expect(obj.aes).toBe(codedata.aes);
+
+
+});
 
 });
 
