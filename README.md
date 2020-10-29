@@ -1,5 +1,5 @@
 ## Tests of global-input libraries 
-This repository is intended to focus on testing [global-input-message](https://github.com/global-input/global-input-message) and [global-input-react](https://github.com/global-input/global-input-react) components. 
+This repository is created for testings [global-input-message](https://github.com/global-input/global-input-message) and [global-input-react](https://github.com/global-input/global-input-react) modules using various tools. 
 
 ### How to Run
 
