@@ -19,34 +19,34 @@ declare global {
 export interface TestApp {
     con: GlobalInputMessageConnector;
     receiver: PromiseMessageReceiver;
-    ui: InitData|null;
-    message?: any;    
+    ui?: InitData|null;
+    message?: any;
 };
 
 export interface TestAppReact {
-    hook:any;   
-    receiver: PromiseMessageReceiver; 
+    hook:any;
+    receiver: PromiseMessageReceiver;
     ui: InitData;
-    message?: any;    
+    message?: any;
 };
 export interface TestAppReact2 {
-    hook:any;       
+    hook:any;
     ui: InitData;
     listener:any;
-    calls:any[];    
+    calls:any[];
 };
 
-export interface DeviceApp {    
-    hook:any;    
+export interface DeviceApp {
+    hook:any;
     ui?: InitData;
     message?: any;
-    codeAES?: string;  
+    codeAES?: string;
   };
-  
+
 /**
  * compare initData to expectedInitData
- * @param {*} initData 
- * @param {*} expectedInitData 
+ * @param {*} initData
+ * @param {*} expectedInitData
  */
 
 
@@ -113,8 +113,3 @@ export function toBeSameInitData(received:any, expected:any) {
         message: () => `received initData contains the same data as in the expected initData`
     };
 }
-
-
-  
-  
-  
