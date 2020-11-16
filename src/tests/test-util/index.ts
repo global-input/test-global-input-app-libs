@@ -1,8 +1,8 @@
-import { GlobalInputMessageConnector, InitData} from "global-input-react"; //import types;
+import { GlobalInputMessageConnector, InitData } from "global-input-react"; //import types;
 
-import {PromiseMessageReceiver,createInputReceivers} from './promising-callbacks';
+import { PromiseMessageReceiver, createInputReceivers } from './promising-callbacks';
 
-export {createInputReceivers};
+export { createInputReceivers };
 
 //export  {createInputReceivers,PromiseMessageReceiver,MessageReceiver};
 //export {createInputReceivers,PromiseMessageReceiver,MessageReceiver};
@@ -19,29 +19,29 @@ declare global {
 export interface TestApp {
     con: GlobalInputMessageConnector;
     receiver: PromiseMessageReceiver;
-    ui?: InitData|null;
+    ui?: InitData | null;
     message?: any;
 };
 
 export interface TestAppReact {
-    hook:any;
+    hook: any;
     receiver: PromiseMessageReceiver;
     ui: InitData;
     message?: any;
 };
 export interface TestAppReact2 {
-    hook:any;
+    hook: any;
     ui: InitData;
-    listener:any;
-    calls:any[];
+    listener: any;
+    calls: any[];
 };
 
 export interface DeviceApp {
-    hook:any;
+    hook: any;
     ui?: InitData;
     message?: any;
     codeAES?: string;
-  };
+};
 
 /**
  * compare initData to expectedInitData
@@ -50,12 +50,18 @@ export interface DeviceApp {
  */
 
 
-export function toBeSameInitData(received:any, expected:any) {
+export function toBeSameInitData(received: any, expected: any) {
     if (received.action !== expected.action) {
-        return {
-            pass: false,
-            message: () => `action = "${expected.action}" is expected but received "${received.action}" instead`
-        };
+        if ((!expected.action) && received.action === 'input') {
+            console.log("used the default, that is fine");
+        }
+        else {
+            return {
+                pass: false,
+                message: () => `action = "${expected.action}" is expected but received "${received.action}" instead`
+            };
+        }
+
     }
     if (received.dataType !== expected.dataType) {
         return {
