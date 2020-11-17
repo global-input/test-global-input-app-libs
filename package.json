@@ -11,7 +11,7 @@
     "@types/qrcode.react": "^1.0.1",
     "@types/react-dom": "^16.9.9",
     "global-input-message": "^2.1.2",
-    "global-input-react": "^4.3.5",
+    "global-input-react": "^4.3.6",
     "qrcode.react": "^1.0.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.1",
