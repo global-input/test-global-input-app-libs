@@ -1,19 +1,19 @@
 import React, { useState} from 'react';
-import { useGlobalInputApp } from 'global-input-react';
+import { useGlobalInputApp, ConnectQR } from 'global-input-react';
 
 const usernameField={
   id: "username",
-  label: "Username"  
+  label: "Username"
 };
 
 const passwordField={
   id: "password",
-  label: "Password"  
+  label: "Password"
 };
 const loginButton={
   id: "login",
   label: "Login",
-  type: "button",      
+  type: "button",
 }
 const loginInitData = {
   id:"login",
@@ -44,8 +44,8 @@ const completedInitData = {
 export const TestWithLoginForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [page,setPage] =useState(1);  
-  const mobile = useGlobalInputApp({ initData: loginInitData });  
+  const [page,setPage] =useState(1);
+  const mobile = useGlobalInputApp({ initData: loginInitData });
   mobile.setOnchange(({ field,sendInitData}) => {
     const {id,value} = field;
 
@@ -62,22 +62,22 @@ export const TestWithLoginForm = () => {
         break;
     }
   });
-  
+
 
   return (
     <>
-      <mobile.ConnectQR/>      
-      <div>Multiple Steps</div>                   
+      <ConnectQR mobile={mobile}/>
+      <div>Multiple Steps</div>
       {page===1 && (<>
               <div>Username:<input value={username} onChange={evt => {
                 setUsername(evt.target.value);
-                mobile.sendValue(usernameField.id, evt.target.value);}}/> 
+                mobile.sendValue(usernameField.id, evt.target.value);}}/>
               </div>
               <div>Password:<input value={password} onChange={evt=>{
                                 setPassword(evt.target.value);
-                                mobile.sendValue(passwordField.id, evt.target.value);}}/> 
+                                mobile.sendValue(passwordField.id, evt.target.value);}}/>
               </div>
-          </>)}              
+          </>)}
        {page ===2 &&
          <div>Login Completed</div>
        }
